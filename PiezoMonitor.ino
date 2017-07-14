@@ -39,10 +39,29 @@ void setup()
 
 void loop()
 {
-  // Read Piezo ADC value in, and convert it to a voltage
   int piezoADC = analogRead(PIEZO_PIN);
+
+  // subtract the last reading:
+  total = total - readings[readIndex];
+  // read from the sensor:
+  readings[readIndex] = piezoADC;
+  // add the reading to the total:
+  total = total + readings[readIndex];
+  // advance to the next position in the array:
+  readIndex = readIndex + 1;
+
+  // if we're at the end of the array...
+  if (readIndex >= numReadings) {
+    // ...wrap around to the beginning:
+    readIndex = 0;
+  }
+
+  // calculate the average:
+  average = total / numReadings;
+
+  // Read Piezo ADC value in, and convert it to a voltage
   float piezoV = piezoADC / 1023.0 * 5.0;
   Serial.print(piezoV); // Print the voltage.
   Serial.print(",");
-  Serial.println(avg);
+  Serial.println(average);
 }
