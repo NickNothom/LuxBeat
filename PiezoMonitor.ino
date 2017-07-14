@@ -17,15 +17,32 @@ Arduino 1.6.7
 ******************************************************************************/
 const int PIEZO_PIN = A0; // Piezo output
 
-void setup() 
+const int numReadings = 10;
+
+int readings[numReadings];      // the readings from the analog input
+int readIndex = 0;              // the index of the current reading
+int total = 0;                  // the running total
+int average = 0;                // the average
+
+
+void setup()
 {
+  //USB Serial
   Serial.begin(9600);
+
+  //Initialize averaging filter
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+    readings[thisReading] = 0;
+  }
+
 }
 
-void loop() 
+void loop()
 {
   // Read Piezo ADC value in, and convert it to a voltage
   int piezoADC = analogRead(PIEZO_PIN);
   float piezoV = piezoADC / 1023.0 * 5.0;
-  Serial.println(piezoV); // Print the voltage.
+  Serial.print(piezoV); // Print the voltage.
+  Serial.print(",");
+  Serial.println(avg);
 }
