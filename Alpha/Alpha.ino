@@ -22,17 +22,19 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, LED_PIN, NEO_GRB + NEO_KHZ800);
 //Input
 int piezoAmp = 0;
 int piezoMax = 0;
-int piezoBufferSize = 20;
+int piezoBufferSize = 100;
 
 //Outputs
-double pulseValue = 0;
-double pulseDecay = 2;
-double pulseStrength = 0.5;
-int    lightOffset = 100;
-double lightValue = 0;
+double pulseDecay = 0.02;          // How fast the signal falls
+double pulseStrength = 0.01;     // How much influence the accumulator has
+int    lightOffset = 100;       // Value that the signal will rest at
+double pulseValue = 0;          // Value of the pulse
+double lightValue = 0;          // Total output (pulse + offset)
 
 // Queue of ADC values
 QueueArray <int> piezoBuffer;
+
+int cycle = 0;
 
 void setup()
 {
@@ -41,7 +43,7 @@ void setup()
   strip.show();
 
   //USB Serial
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   //Enable Output LED
   pinMode(LED_BUILTIN, OUTPUT);
@@ -59,14 +61,14 @@ void loop()
   calcPiezoMax();
   lightWave();
 
-  render();
+  if (cycle % 50 == 0){
+    render();
+  }
+  cycle++;
 }
 
 void readPiezo(){
   piezoAmp = analogRead(PIEZO_PIN);
-
-  // Read Piezo ADC value in, and convert it to a voltage
-  //piezoV = piezoADC / 1023.0 * 5.0;
 
   piezoBuffer.push(piezoAmp);
   if (piezoBuffer.count() > piezoBufferSize) {
