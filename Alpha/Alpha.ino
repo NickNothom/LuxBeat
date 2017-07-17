@@ -43,11 +43,11 @@ void setup()
   //USB Serial
   Serial.begin(9600);
 
-  piezoBuffer.setPrinter (Serial);
-
   //Enable Output LED
   pinMode(LED_BUILTIN, OUTPUT);
 
+  //Input Setup
+  piezoBuffer.setPrinter (Serial);
   for (int i = 0; i < piezoBufferSize; i++){
     readPiezo();
   }
@@ -58,20 +58,6 @@ void loop()
   readPiezo();
   calcPiezoMax();
   lightWave();
-/*
-  // If there was just a hit
-  if (piezoV > 1 && light == 0) {
-    onHit();
-  }
-
-  if (light == 1 && count < maxTimeout) {
-    count ++;
-  }
-  else {
-    light = 0;
-    count = 0;
-    digitalWrite(LED_BUILTIN, LOW);
-  }*/
 
   render();
 }
@@ -111,15 +97,14 @@ void lightWave(){
 }
 
 void onHit(){
-
-  //colorWipe(strip.Color(random(255), random(255), random(255)), 5);
+  colorWipe(strip.Color(random(255), random(255), random(255)), 5);
 }
 
 void render(){
 #ifdef DEBUG
  Serial.print(piezoAmp); // Print the voltage.
  Serial.print(",");
- Serial.print(piezoMax);
+ Serial.print(piezoAmpSmoothed());
  Serial.print(",");
  Serial.print(lightValue);
  Serial.println();
@@ -147,7 +132,7 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 }
 
-//Set the color of the entire strip
+// Set the color of the entire strip
 void colorSet(uint32_t c) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
