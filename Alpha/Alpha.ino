@@ -1,7 +1,6 @@
 /*
 LuxBeat Alpha Demo
 Uses one Piezoelectric Sensor, and one LED strip.
-
 */
 
 #include <Adafruit_NeoPixel.h>
@@ -13,25 +12,23 @@ Uses one Piezoelectric Sensor, and one LED strip.
 
 #define DEBUG
 
+//Pins
 const int LED_PIN = 6;
-const int PIEZO_PIN = A0; // Piezo output
+const int PIEZO_PIN = A0;
 
+//LED Setup
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(60, LED_PIN, NEO_GRB + NEO_KHZ800);
 
-const int maxTimeout = 10;
-int count = 0;
-int light = 0;
-
+//Input
 int piezoAmp = 0;
-//float piezoV = 0;
 int piezoMax = 0;
 int piezoBufferSize = 20;
 
-
+//Outputs
 double pulseValue = 0;
 double pulseDecay = 2;
 double pulseStrength = 0.5;
-int lightOffset = 100;
+int    lightOffset = 100;
 double lightValue = 0;
 
 // Queue of ADC values
@@ -47,6 +44,8 @@ void setup()
   Serial.begin(9600);
 
   piezoBuffer.setPrinter (Serial);
+
+  //Enable Output LED
   pinMode(LED_BUILTIN, OUTPUT);
 
   for (int i = 0; i < piezoBufferSize; i++){
@@ -112,8 +111,6 @@ void lightWave(){
 }
 
 void onHit(){
-  digitalWrite(LED_BUILTIN, HIGH);
-  light = 1;
 
   //colorWipe(strip.Color(random(255), random(255), random(255)), 5);
 }
