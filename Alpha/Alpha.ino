@@ -5,6 +5,7 @@ Uses one Piezoelectric Sensor, and one LED strip.
 */
 
 #include <Adafruit_NeoPixel.h>
+#include <QueueArray.h>
 
 #ifdef __AVR__
   #include <avr/power.h>
@@ -21,8 +22,20 @@ const int maxTimeout = 10;
 int count = 0;
 int light = 0;
 
-int piezoADC = 0;
-float piezoV = 0;
+int piezoAmp = 0;
+//float piezoV = 0;
+int piezoMax = 0;
+int piezoBufferSize = 20;
+
+
+double pulseValue = 0;
+double pulseDecay = 2;
+double pulseStrength = 0.5;
+int lightOffset = 100;
+double lightValue = 0;
+
+// Queue of ADC values
+QueueArray <int> piezoBuffer;
 
 void setup()
 {
@@ -33,13 +46,20 @@ void setup()
   //USB Serial
   Serial.begin(9600);
 
+  piezoBuffer.setPrinter (Serial);
   pinMode(LED_BUILTIN, OUTPUT);
+
+  for (int i = 0; i < piezoBufferSize; i++){
+    readPiezo();
+  }
 }
 
 void loop()
 {
   readPiezo();
-
+  calcPiezoMax();
+  lightWave();
+/*
   // If there was just a hit
   if (piezoV > 1 && light == 0) {
     onHit();
@@ -52,30 +72,73 @@ void loop()
     light = 0;
     count = 0;
     digitalWrite(LED_BUILTIN, LOW);
-  }
+  }*/
 
   render();
 }
 
 void readPiezo(){
-  int piezoADC = analogRead(PIEZO_PIN);
+  piezoAmp = analogRead(PIEZO_PIN);
 
   // Read Piezo ADC value in, and convert it to a voltage
-  float piezoV = piezoADC / 1023.0 * 5.0;
+  //piezoV = piezoADC / 1023.0 * 5.0;
+
+  piezoBuffer.push(piezoAmp);
+  if (piezoBuffer.count() > piezoBufferSize) {
+    piezoBuffer.pop();
+  }
+}
+void calcPiezoMax(){
+
+  int max = 0;
+  for (int i = 0; i < 5; i++) {
+    int n = piezoBuffer.peekAt(i);
+    if (n > max)
+      max = n;
+  }
+  //Why do I have to do this.
+  if (piezoAmp > max)
+    max = piezoAmp;
+
+  piezoMax = max;
+}
+
+void lightWave(){
+  pulseValue += (piezoAmp * pulseStrength);
+  pulseValue = pulseValue * ((100 - pulseDecay) * 0.01);
+  pulseValue = min(pulseValue, 1024);
+
+  lightValue = pulseValue + lightOffset;
 }
 
 void onHit(){
   digitalWrite(LED_BUILTIN, HIGH);
   light = 1;
 
-  colorWipe(strip.Color(random(255), random(255), random(255)), 5);
+  //colorWipe(strip.Color(random(255), random(255), random(255)), 5);
 }
 
 void render(){
 #ifdef DEBUG
- Serial.println(piezoV); // Print the voltage.
+ Serial.print(piezoAmp); // Print the voltage.
+ Serial.print(",");
+ Serial.print(piezoMax);
+ Serial.print(",");
+ Serial.print(lightValue);
+ Serial.println();
 #endif
-  strip.show();
+  //strip.show();
+}
+
+
+int piezoAmpSmoothed() {
+  int avg = 0;
+  for (int i = 0; i < piezoBuffer.count(); i++) {
+    avg += piezoBuffer.peekAt(i);
+  }
+  avg += piezoAmp;
+  avg = avg / (piezoBuffer.count() + 1);
+  return avg;
 }
 
 // Fill the dots one after the other with a color
