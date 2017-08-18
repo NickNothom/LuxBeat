@@ -24,10 +24,15 @@ int piezoAmp = 0;
 int piezoMax = 0;
 int piezoBufferSize = 100;
 
+//Settings
+int r_hex = 255;
+int g_hex = 0;
+int b_hex = 255;
+
 //Outputs
-double pulseDecay = 0.02;          // How fast the signal falls
+double pulseDecay = 0.1;          // How fast the signal falls
 double pulseStrength = 0.01;     // How much influence the accumulator has
-int    lightOffset = 100;       // Value that the signal will rest at
+int    lightOffset = 0;       // Value that the signal will rest at
 double pulseValue = 0;          // Value of the pulse
 double lightValue = 0;          // Total output (pulse + offset)
 
@@ -111,7 +116,14 @@ void render(){
  Serial.print(lightValue);
  Serial.println();
 #endif
-  //strip.show();
+
+  int ledBrightness = lightValue / 16;
+  double r_mult = r_hex / 255;
+  double g_mult = g_hex / 255;
+  double b_mult = b_hex / 255;
+
+  colorSet(strip.Color((ledBrightness * r_mult), (ledBrightness * g_mult), (ledBrightness * b_mult)));
+  strip.show();
 }
 
 
@@ -139,5 +151,5 @@ void colorSet(uint32_t c) {
   for(uint16_t i=0; i<strip.numPixels(); i++) {
     strip.setPixelColor(i, c);
   }
-  strip.show();
+  //strip.show();
 }
